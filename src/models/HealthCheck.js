@@ -1,13 +1,6 @@
-const { Sequelize, DataTypes } = require('sequelize');
-require('dotenv').config();
+const { DataTypes } = require('sequelize');
+const sequelize = require('../config/database');
 
-// Configure Sequelize to connect to MySQL
-const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, process.env.DB_PASSWORD, {
-  host: process.env.DB_HOST,
-  dialect: 'mysql',
-});
-
-// Define the HealthCheck model
 const HealthCheck = sequelize.define('HealthCheck', {
   checkId: {
     type: DataTypes.INTEGER,
@@ -16,14 +9,11 @@ const HealthCheck = sequelize.define('HealthCheck', {
   },
   datetime: {
     type: DataTypes.DATE,
-    defaultValue: Sequelize.NOW,
+    defaultValue: DataTypes.NOW,
     allowNull: false,
   },
-},
-{
+}, {
   timestamps: false,
-}
-);
+});
 
-// Export the sequelize instance and models
-module.exports = { sequelize, HealthCheck };
+module.exports = HealthCheck;
