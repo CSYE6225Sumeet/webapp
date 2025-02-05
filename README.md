@@ -77,3 +77,37 @@ exit;
     $node app.js
 
 
+### 4. To run shell script
+```bash
+bash setup_web.sh
+```
+
+## Build and Deploy on an Instance
+The shell script will do the following tasks:
+1. Updates & upgrades the packages
+2. Updates the packages on the system.
+3. Installs MySQL Database.
+4. Creates a database in the MySQL DB.
+5. Creates a new Linux group for the application.
+6. Creates a new user of the application.
+7. Unzips the application in /opt/csye6225 directory.
+8. Updates the permissions of the folder and artifacts in the directory.
+
+
+### 1. Create an Instance
+
+### 2. Connect to that instance using the ssh command
+```bash
+ssh -i "ssh-key" username@ip
+```
+
+### 3. Send the shell script to the instance using scp command
+```bash
+scp -i "ssh-key" setup_web.sh username@ip:/path/
+```
+
+### 4. Run the shell script for setup
+```bash
+bash setup_web.sh
+```
+

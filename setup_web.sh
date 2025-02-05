@@ -7,7 +7,7 @@ DB_PASSWORD="StrongPassword123"  # Change this to a secure password
 DB_ROOT_PASS="Aak007lpice123@" # Change this to a secure root password
 GROUP_NAME="webappgroup"
 USER_NAME="webappuser"
-ZIP_FILE="$HOME/Sumeet_Rane_002304942_01.zip"
+ZIP_FILE="$HOME/Sumeet_Rane_002304942_02.zip"
 APP_DIR="/opt/csye6225"
 LOG_FILE="/var/log/setup_webapp.log"
 
@@ -68,7 +68,7 @@ sudo unzip -o "$ZIP_FILE" -d "$APP_DIR"
 
 # Install Node.js dependencies
 echo "Installing Node.js dependencies..."
-cd $APP_DIR/Sumeet_Rane_002304942_01/webapp/src
+cd $APP_DIR/Sumeet_Rane_002304942_02/webapp/src
 sudo npm install
 
 # Update permissions
