@@ -26,6 +26,8 @@ app.use(setCommonHeaders);
 app.use(healthCheckRouter);
 
 // Start the server
-app.listen(8080, () => {
+const server = app.listen(8080, () => {
   console.log('Server is running on http://localhost:8080');
 });
+
+module.exports = { app, server };
