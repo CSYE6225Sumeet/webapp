@@ -13,6 +13,7 @@ const HealthCheck = sequelize.define('HealthCheck', {
     allowNull: false,
   },
 }, {
+  tableName: 'HealthCheck',
   timestamps: false,
 });
 
