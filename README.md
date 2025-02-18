@@ -111,4 +111,4 @@ scp -i "ssh-key" setup_web.sh username@ip:/path/
 bash setup_web.sh
 ```
 
-### GitHub Workflow for CI
+### GitHub Workflow CI
