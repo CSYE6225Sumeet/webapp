@@ -46,7 +46,7 @@ jobs:
       - name: Secure MySQL Installation
         run: |
           echo "Securing MySQL..."
-          sudo mysql -uroot <<_EOF_
+          sudo mysql -u ${{ secrets.DB_ROOT }} <<_EOF_
           ALTER USER '${{ secrets.DB_USER }}'@'localhost' IDENTIFIED WITH mysql_native_password BY '${{ secrets.DB_ROOT_PASSWORD }}';
           FLUSH PRIVILEGES;
           _EOF_
