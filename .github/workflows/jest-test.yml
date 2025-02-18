@@ -35,20 +35,24 @@ jobs:
             exit 1
           fi
 
-      - name: Set up MySQL
+      - name: Secure MySQL Installation
         run: |
-          echo "Updating MySQL authentication..."
-          sudo mysql -uroot -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${{ secrets.DB_ROOT_PASSWORD }}';"
-          sudo mysql -uroot -p${{ secrets.DB_ROOT_PASSWORD }} -e "FLUSH PRIVILEGES;"
-          
-          echo "Creating Database and User..."
-          sudo mysql -uroot -p${{ secrets.DB_ROOT_PASSWORD }} -e "CREATE DATABASE IF NOT EXISTS ${{ secrets.DB_NAME }};"
-          sudo mysql -uroot -p${{ secrets.DB_ROOT_PASSWORD }} -e "CREATE USER IF NOT EXISTS '${{ secrets.DB_USER }}'@'localhost' IDENTIFIED BY '${{ secrets.DB_PASSWORD }}';"
-          sudo mysql -uroot -p${{ secrets.DB_ROOT_PASSWORD }} -e "GRANT ALL PRIVILEGES ON ${{ secrets.DB_NAME }}.* TO '${{ secrets.DB_USER }}'@'localhost';"
-          sudo mysql -uroot -p${{ secrets.DB_ROOT_PASSWORD }} -e "FLUSH PRIVILEGES;"
+          echo "Securing MySQL..."
+          sudo mysql --user=root <<_EOF_
+          ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${{ secrets.DB_ROOT_PASSWORD }}';
+          DELETE FROM mysql.user WHERE User='';
+          DROP DATABASE IF EXISTS test;
+          DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
+          FLUSH PRIVILEGES;
+          _EOF_
 
-          echo "Restarting MySQL..."
-          sudo systemctl restart mysql
+      - name: Set Up MySQL Database
+        run: |
+          echo "Setting up MySQL database and user..."
+          sudo mysql -uroot -p${{ secrets.DB_ROOT_PASSWORD }} <<EOF
+          CREATE DATABASE IF NOT EXISTS ${{ secrets.DB_NAME }};
+          FLUSH PRIVILEGES;
+          EOF
 
       - name: Configure Environment Variables
         run: |
