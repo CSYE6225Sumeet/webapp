@@ -3,11 +3,11 @@ name: CI - Web App Tests with MySQL
 on:
   pull_request:
     branches:
-      - main  # Run CI for PRs targeting the main branch
+      - main
 
 jobs:
   jest-test:
-    runs-on: ubuntu-latest  # Use the latest Ubuntu environment
+    runs-on: ubuntu-latest
 
     services:
       mysql:
@@ -32,12 +32,12 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20'  # Adjust based on your project
+          node-version: '20'
 
       - name: Install Dependencies
         run: |
           cd src
-          npm install  # Use the package manager relevant to your project
+          npm install
 
       - name: Wait for MySQL to be Ready
         run: |
@@ -57,13 +57,15 @@ jobs:
 
       - name: Initialize MySQL Database as Root
         run: |
-          mysql -h 127.0.0.1 -uroot -p${{ secrets.DB_ROOT_PASSWORD }} -e "
+          mysql -h 127.0.0.1 -uroot -p${{ secrets.DB_ROOT_PASSWORD }} <<EOF
           CREATE DATABASE IF NOT EXISTS ${{ secrets.DB_NAME }};
           CREATE USER IF NOT EXISTS '${{ secrets.DB_USER }}'@'%' IDENTIFIED BY '${{ secrets.DB_PASSWORD }}';
           GRANT ALL PRIVILEGES ON ${{ secrets.DB_NAME }}.* TO '${{ secrets.DB_USER }}'@'%';
-          FLUSH PRIVILEGES;"
+          ALTER USER '${{ secrets.DB_USER }}'@'%' IDENTIFIED WITH mysql_native_password BY '${{ secrets.DB_PASSWORD }}';
+          FLUSH PRIVILEGES;
+          EOF
 
       - name: Run Tests
         run: |
           cd src
-          npm test  # Adjust this based on your framework
+          npm test
