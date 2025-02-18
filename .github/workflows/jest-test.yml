@@ -1,0 +1,51 @@
+name: Test CI
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  mysql-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install MySQL
+        run: |
+          sudo apt update
+          sudo apt install -y mysql-server
+          sudo systemctl start mysql
+          sudo systemctl enable mysql
+
+      - name: Configure MySQL
+        run: |
+          sudo mysql -e "CREATE USER '${{ secrets.DB_USER }}'@'localhost' IDENTIFIED BY '${{ secrets.DB_PASSWORD }}';"
+          sudo mysql -e "CREATE DATABASE ${{ secrets.DB_NAME }};"
+          sudo systemctl restart mysql
+
+      - name: Configure Environment Variables
+        run: |
+          touch src/.env
+          echo DB_Host=${{ secrets.DB_HOST }} >> src/.env
+          echo DB_User=${{ secrets.DB_USER }} >> src/.env
+          echo DB_Pass=${{ secrets.DB_PASSWORD }} >> src/.env
+          echo DB_Name=${{ secrets.DB_NAME }} >> src/.env
+          echo DB_Port=${{ secrets.DB_PORT }} >> src/.env
+          echo APP_Port=${{ secrets.PORT }} >> src/.env
+          echo DB_SSLMode=${{ secrets.DB_SSLMODE }} >> src/.env
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install
+        working-directory: src  # 👈 Run inside `src/`
+
+      - name: Run Tests
+        run: npm test
+        working-directory: src  # 👈 Run inside `src/`
