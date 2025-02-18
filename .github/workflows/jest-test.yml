@@ -7,7 +7,7 @@ on:
       branches: [ "main" ]
 
 jobs:
-  jest-test:
+  node-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -25,15 +25,24 @@ jobs:
         run: |
           echo "Updating MySQL root authentication..."
           sudo mysql -u root <<_EOF_
-          ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'rootpass';
+          ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${{ secrets.DB_ROOT_PASSWORD }}';
+          FLUSH PRIVILEGES;
+          _EOF_
+
+      - name: Allow Root Login via TCP
+        run: |
+          echo "Updating MySQL root privileges..."
+          sudo mysql -u root -p"${{ secrets.DB_ROOT_PASSWORD }}" <<_EOF_
+          ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY '${{ secrets.DB_ROOT_PASSWORD }}';
+          GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;
           FLUSH PRIVILEGES;
           _EOF_
 
       - name: Configure MySQL
         run: |
           echo "Creating MySQL user and database..."
-          sudo mysql -u root --prootpass <<EOF
-          CREATE USER IF NOT EXISTS '${{ secrets.DB_USER }}'@'%' IDENTIFIED BY '${{ secrets.DB_ROOT_PASSWORD }}';
+          sudo mysql -u root -p"${{ secrets.DB_ROOT_PASSWORD }}" -h 127.0.0.1 <<EOF
+          CREATE USER IF NOT EXISTS '${{ secrets.DB_USER }}'@'%' IDENTIFIED BY '${{ secrets.DB_PASSWORD }}';
           CREATE DATABASE IF NOT EXISTS ${{ secrets.DB_NAME }};
           GRANT ALL PRIVILEGES ON ${{ secrets.DB_NAME }}.* TO '${{ secrets.DB_USER }}'@'%';
           FLUSH PRIVILEGES;
@@ -49,10 +58,6 @@ jobs:
           echo DB_Pass=${{ secrets.DB_PASSWORD }} >> src/.env
           echo DB_Name=${{ secrets.DB_NAME }} >> src/.env
           echo DB_Port=${{ secrets.DB_PORT || '3306' }}" >> src/.env
-          echo APP_Port=${{ secrets.PORT }} >> src/.env
-          echo DB_SSLMode=${{ secrets.DB_SSLMODE }} >> src/.env
-          echo S3_Bucket=abc >> src/.env
-          echo Bucket_Name=1234 >> src/.env
 
       - name: Install Node.js
         uses: actions/setup-node@v3
