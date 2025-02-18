@@ -19,16 +19,40 @@ jobs:
           sudo systemctl start mysql
           sudo systemctl enable mysql
 
+      - name: Wait for MySQL to Be Ready
+        run: |
+          echo "Waiting for MySQL to be ready..."
+          for i in {30..0}; do
+            if sudo mysqladmin ping -h 127.0.0.1 --silent; then
+              echo "MySQL is ready!"
+              break
+            fi
+            echo "MySQL not ready yet. Retrying in 2 seconds..."
+            sleep 2
+          done
+          if [ "$i" = 0 ]; then
+            echo "MySQL did not start in time."
+            exit 1
+          fi
+
       - name: Set up MySQL
         run: |
-          sudo systemctl start mysql
-          sudo mysql -e "CREATE USER IF NOT EXISTS '${{ secrets.DB_USER }}'@'localhost' IDENTIFIED BY '${{ secrets.DB_PASSWORD }}';"
-          sudo mysql -e "CREATE DATABASE IF NOT EXISTS ${{ secrets.DB_NAME }};"
-          sudo mysql -e "GRANT ALL PRIVILEGES ON ${{ secrets.DB_NAME }}.* TO '${{ secrets.DB_USER }}'@'localhost';"
-          sudo mysql -e "FLUSH PRIVILEGES;"
+          echo "Updating MySQL authentication..."
+          sudo mysql -uroot -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${{ secrets.DB_ROOT_PASSWORD }}';"
+          sudo mysql -uroot -p${{ secrets.DB_ROOT_PASSWORD }} -e "FLUSH PRIVILEGES;"
+          
+          echo "Creating Database and User..."
+          sudo mysql -uroot -p${{ secrets.DB_ROOT_PASSWORD }} -e "CREATE DATABASE IF NOT EXISTS ${{ secrets.DB_NAME }};"
+          sudo mysql -uroot -p${{ secrets.DB_ROOT_PASSWORD }} -e "CREATE USER IF NOT EXISTS '${{ secrets.DB_USER }}'@'localhost' IDENTIFIED BY '${{ secrets.DB_PASSWORD }}';"
+          sudo mysql -uroot -p${{ secrets.DB_ROOT_PASSWORD }} -e "GRANT ALL PRIVILEGES ON ${{ secrets.DB_NAME }}.* TO '${{ secrets.DB_USER }}'@'localhost';"
+          sudo mysql -uroot -p${{ secrets.DB_ROOT_PASSWORD }} -e "FLUSH PRIVILEGES;"
+
+          echo "Restarting MySQL..."
+          sudo systemctl restart mysql
 
       - name: Configure Environment Variables
         run: |
+          echo "Writing environment variables to .env file..."
           touch src/.env
           echo DB_Host=${{ secrets.DB_HOST }} >> src/.env
           echo DB_User=${{ secrets.DB_USER }} >> src/.env
