@@ -41,6 +41,7 @@ jobs:
           echo "DB_USER: ${{ secrets.DB_USER }}"
           echo "DB_ROOT_PASSWORD length: ${#DB_ROOT_PASSWORD}"
           echo "DB_NAME length: ${#DB_NAME}"
+          echo "DB_USER length: ${#DB_USER}"
 
       - name: Secure MySQL Installation
         run: |
@@ -55,18 +56,19 @@ jobs:
           echo "Setting up MySQL database and user..."
           sudo mysql -u ${{ secrets.DB_USER }} -p"${{ secrets.DB_ROOT_PASSWORD }}" -h 127.0.0.1 <<EOF
           CREATE DATABASE IF NOT EXISTS ${{ secrets.DB_NAME }};
+          GRANT ALL PRIVILEGES ON ${{ secrets.DB_NAME }}.* TO '${{ secrets.DB_USER }}'@'%' IDENTIFIED BY '${{ secrets.DB_ROOT_PASSWORD }}';
           FLUSH PRIVILEGES;
           EOF
 
       - name: Configure Environment Variables
         run: |
-          echo "Writing environment variables to .env file..."
+          echo "Writing environment variables to src/.env file..."
           touch src/.env
-          echo DB_Host=127.0.0.1 >> src/.env  # Use 127.0.0.1 instead of localhost
-          echo DB_User=${{ secrets.DB_USER }} >> src/.env
-          echo DB_Pass=${{ secrets.DB_ROOT_PASSWORD }} >> src/.env
-          echo DB_Name=${{ secrets.DB_NAME }} >> src/.env
-          echo DB_Port=${{ secrets.DB_PORT || '3306' }} >> src/.env
+          echo "DB_Host=127.0.0.1" >> src/.env
+          echo "DB_User=${{ secrets.DB_USER }}" >> src/.env
+          echo "DB_Pass=${{ secrets.DB_ROOT_PASSWORD }}" >> src/.env
+          echo "DB_Name=${{ secrets.DB_NAME }}" >> src/.env
+          echo "DB_Port=${{ secrets.DB_PORT || '3306' }}" >> src/.env
 
       - name: Install Node.js
         uses: actions/setup-node@v3
@@ -79,5 +81,7 @@ jobs:
         working-directory: src
 
       - name: Run Tests
-        run: npm test
+        run: |
+          export $(grep -v '^#' src/.env | xargs)  # Load .env variables
+          npm test
         working-directory: src
