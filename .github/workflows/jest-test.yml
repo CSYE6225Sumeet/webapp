@@ -36,6 +36,11 @@ jobs:
             exit 1
           fi
 
+      - name: Debug MySQL Variables
+        run: |
+          echo "DB_USER: ${{ secrets.DB_USER }}"
+          echo "DB_ROOT_PASSWORD length: ${#DB_ROOT_PASSWORD}"
+
       - name: Secure MySQL Installation
         run: |
           echo "Securing MySQL..."
@@ -43,11 +48,6 @@ jobs:
           ALTER USER '${{ secrets.DB_USER }}'@'localhost' IDENTIFIED WITH mysql_native_password BY '${{ secrets.DB_ROOT_PASSWORD }}';
           FLUSH PRIVILEGES;
           _EOF_
-
-      - name: Debug MySQL Variables
-        run: |
-          echo "DB_USER: ${{ secrets.DB_USER }}"
-          echo "DB_ROOT_PASSWORD length: ${#DB_ROOT_PASSWORD}"
 
       - name: Set Up MySQL Database
         run: |
