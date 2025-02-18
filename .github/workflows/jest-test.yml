@@ -39,9 +39,9 @@ jobs:
       - name: Debug MySQL Variables
         run: |
           echo "DB_USER: ${{ secrets.DB_USER }}"
-          echo "DB_ROOT_PASSWORD length: ${#DB_ROOT_PASSWORD}"
-          echo "DB_NAME length: ${#DB_NAME}"
-          echo "DB_USER length: ${#DB_USER}"
+          echo "DB_ROOT_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}"
+          echo "DB_NAME: ${{ secrets.DB_NAME }}"
+          echo "DB_USER: ${{ secrets.DB_USER }}"
 
       - name: Secure MySQL Installation
         run: |
