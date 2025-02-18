@@ -3,11 +3,11 @@ name: CI - Web App Tests with MySQL
 on:
   pull_request:
     branches:
-      - main
+      - main  # Run CI for PRs targeting the main branch
 
 jobs:
   jest-test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # Use the latest Ubuntu environment
 
     services:
       mysql:
@@ -64,6 +64,13 @@ jobs:
           ALTER USER '${{ secrets.DB_USER }}'@'%' IDENTIFIED WITH mysql_native_password BY '${{ secrets.DB_PASSWORD }}';
           FLUSH PRIVILEGES;
           EOF
+
+      - name: Set Environment Variables for Tests
+        run: |
+          echo "DB_NAME=${{ secrets.DB_NAME }}" >> src/.env
+          echo "DB_USER=${{ secrets.DB_USER }}" >> src/.env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> src/.env
+          echo "DB_HOST=127.0.0.1" >> src/.env
 
       - name: Run Tests
         run: |
