@@ -40,6 +40,7 @@ jobs:
         run: |
           echo "DB_USER: ${{ secrets.DB_USER }}"
           echo "DB_ROOT_PASSWORD length: ${#DB_ROOT_PASSWORD}"
+          echo "DB_NAME length: ${#DB_NAME}"
 
       - name: Secure MySQL Installation
         run: |
