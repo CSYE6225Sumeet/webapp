@@ -32,9 +32,6 @@ jobs:
           echo DB_User=${{ secrets.DB_USER }} >> src/.env
           echo DB_Pass=${{ secrets.DB_PASSWORD }} >> src/.env
           echo DB_Name=${{ secrets.DB_NAME }} >> src/.env
-          echo DB_Port=${{ secrets.DB_PORT }} >> src/.env
-          echo APP_Port=${{ secrets.PORT }} >> src/.env
-          echo DB_SSLMode=${{ secrets.DB_SSLMODE }} >> src/.env
 
       - name: Install Node.js
         uses: actions/setup-node@v3
