@@ -22,7 +22,7 @@ jobs:
       - name: Wait for MySQL to Be Ready
         run: |
           echo "Waiting for MySQL to be ready..."
-          for i in {30..0}; do
+          for i in {60..0}; do
             if sudo mysqladmin ping -h 127.0.0.1 --silent; then
               echo "MySQL is ready!"
               break
@@ -32,24 +32,22 @@ jobs:
           done
           if [ "$i" = 0 ]; then
             echo "MySQL did not start in time."
+            sudo journalctl -u mysql --no-pager | tail -n 20
             exit 1
           fi
 
       - name: Secure MySQL Installation
         run: |
           echo "Securing MySQL..."
-          sudo mysql --user=root <<_EOF_
+          sudo mysql -u root <<_EOF_
           ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${{ secrets.DB_ROOT_PASSWORD }}';
-          DELETE FROM mysql.user WHERE User='';
-          DROP DATABASE IF EXISTS test;
-          DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
           FLUSH PRIVILEGES;
           _EOF_
 
       - name: Set Up MySQL Database
         run: |
           echo "Setting up MySQL database and user..."
-          sudo mysql -uroot -p${{ secrets.DB_ROOT_PASSWORD }} <<EOF
+          sudo mysql -uroot -p"${{ secrets.DB_ROOT_PASSWORD }}" -h 127.0.0.1 <<EOF
           CREATE DATABASE IF NOT EXISTS ${{ secrets.DB_NAME }};
           FLUSH PRIVILEGES;
           EOF
@@ -58,11 +56,11 @@ jobs:
         run: |
           echo "Writing environment variables to .env file..."
           touch src/.env
-          echo DB_Host=${{ secrets.DB_HOST }} >> src/.env
+          echo DB_Host=127.0.0.1 >> src/.env  # Use 127.0.0.1 instead of localhost
           echo DB_User=${{ secrets.DB_USER }} >> src/.env
           echo DB_Pass=${{ secrets.DB_PASSWORD }} >> src/.env
           echo DB_Name=${{ secrets.DB_NAME }} >> src/.env
-          echo DB_Port=${{ secrets.DB_PORT || '3306' }} >> src/.env  # Default to 3306 if not set
+          echo DB_Port=${{ secrets.DB_PORT || '3306' }} >> src/.env
 
       - name: Install Node.js
         uses: actions/setup-node@v3
