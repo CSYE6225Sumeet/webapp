@@ -20,7 +20,7 @@ jobs:
         ports:
           - 3306:3306
         options: >-
-          --health-cmd="mysqladmin ping"
+          --health-cmd="mysqladmin ping -h 127.0.0.1 --silent"
           --health-interval=10s
           --health-timeout=5s
           --health-retries=3
@@ -51,10 +51,16 @@ jobs:
             sleep 2
           done
 
-      - name: Initialize MySQL Database
+      - name: Debug MySQL Connection
         run: |
-          mysql -h 127.0.0.1 -u${{ secrets.DB_USER }} -p${{ secrets.DB_PASSWORD }} -e "
+          mysql -h 127.0.0.1 -uroot -p${{ secrets.DB_ROOT_PASSWORD }} -e "SHOW DATABASES;"
+
+      - name: Initialize MySQL Database as Root
+        run: |
+          mysql -h 127.0.0.1 -uroot -p${{ secrets.DB_ROOT_PASSWORD }} -e "
           CREATE DATABASE IF NOT EXISTS ${{ secrets.DB_NAME }};
+          CREATE USER IF NOT EXISTS '${{ secrets.DB_USER }}'@'%' IDENTIFIED BY '${{ secrets.DB_PASSWORD }}';
+          GRANT ALL PRIVILEGES ON ${{ secrets.DB_NAME }}.* TO '${{ secrets.DB_USER }}'@'%';
           FLUSH PRIVILEGES;"
 
       - name: Run Tests
