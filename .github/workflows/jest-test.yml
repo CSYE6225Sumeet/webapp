@@ -1,8 +1,10 @@
-name: Test CI
+name: Node.js-Test
 
 on:
-  pull_request:
-    branches: [ "main" ]
+    pull_request:
+      branches: [ "main" ]
+    push:
+      branches: [ "main" ]
 
 jobs:
   jest-test:
@@ -19,56 +21,30 @@ jobs:
           sudo systemctl start mysql
           sudo systemctl enable mysql
 
-      - name: Wait for MySQL to Be Ready
+      - name: Configure MySQL
         run: |
-          echo "Waiting for MySQL to be ready..."
-          for i in {60..0}; do
-            if sudo mysqladmin ping -h 127.0.0.1 --silent; then
-              echo "MySQL is ready!"
-              break
-            fi
-            echo "MySQL not ready yet. Retrying in 2 seconds..."
-            sleep 2
-          done
-          if [ "$i" = 0 ]; then
-            echo "MySQL did not start in time."
-            sudo journalctl -u mysql --no-pager | tail -n 20
-            exit 1
-          fi
-
-      - name: Debug MySQL Variables
-        run: |
-          echo "DB_USER: ${{ secrets.DB_USER }}"
-          echo "DB_ROOT_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}"
-          echo "DB_NAME: ${{ secrets.DB_NAME }}"
-          echo "DB_USER: ${{ secrets.DB_USER }}"
-
-      - name: Secure MySQL Installation
-        run: |
-          echo "Securing MySQL..."
-          sudo mysql -u ${{ secrets.DB_ROOT }} <<_EOF_
-          ALTER USER '${{ secrets.DB_USER }}'@'localhost' IDENTIFIED WITH mysql_native_password BY '${{ secrets.DB_ROOT_PASSWORD }}';
-          FLUSH PRIVILEGES;
-          _EOF_
-
-      - name: Set Up MySQL Database
-        run: |
-          echo "Setting up MySQL database and user..."
-          sudo mysql -u ${{ secrets.DB_USER }} -p"${{ secrets.DB_ROOT_PASSWORD }}" -h 127.0.0.1 <<EOF
+          echo "Creating MySQL user and database..."
+          sudo mysql -u root -h 127.0.0.1 <<EOF
+          CREATE USER IF NOT EXISTS '${{ secrets.DB_USER }}'@'%' IDENTIFIED BY '${{ secrets.DB_PASSWORD }}';
           CREATE DATABASE IF NOT EXISTS ${{ secrets.DB_NAME }};
-          GRANT ALL PRIVILEGES ON ${{ secrets.DB_NAME }}.* TO '${{ secrets.DB_USER }}'@'%' IDENTIFIED BY '${{ secrets.DB_ROOT_PASSWORD }}';
+          GRANT ALL PRIVILEGES ON ${{ secrets.DB_NAME }}.* TO '${{ secrets.DB_USER }}'@'%';
           FLUSH PRIVILEGES;
           EOF
+          sudo systemctl restart mysql
 
       - name: Configure Environment Variables
         run: |
           echo "Writing environment variables to src/.env file..."
           touch src/.env
-          echo "DB_Host=127.0.0.1" >> src/.env
-          echo "DB_User=${{ secrets.DB_USER }}" >> src/.env
-          echo "DB_Pass=${{ secrets.DB_ROOT_PASSWORD }}" >> src/.env
-          echo "DB_Name=${{ secrets.DB_NAME }}" >> src/.env
-          echo "DB_Port=${{ secrets.DB_PORT || '3306' }}" >> src/.env
+          echo DB_Host=127.0.0.1 >> src/.env
+          echo DB_User=${{ secrets.DB_USER }} >> src/.env
+          echo DB_Pass=${{ secrets.DB_PASSWORD }} >> src/.env
+          echo DB_Name=${{ secrets.DB_NAME }} >> src/.env
+          echo DB_Port=${{ secrets.DB_PORT || '3306' }} >> src/.env
+          echo APP_Port=${{ secrets.PORT }} >> src/.env
+          echo DB_SSLMode=${{ secrets.DB_SSLMODE }} >> src/.env
+          echo S3_Bucket=abc >> src/.env
+          echo Bucket_Name=1234 >> src/.env
 
       - name: Install Node.js
         uses: actions/setup-node@v3
@@ -77,11 +53,12 @@ jobs:
           cache: 'npm'
 
       - name: Install Dependencies
-        run: npm install
-        working-directory: src
+        run: |
+          cd src
+          npm install
 
       - name: Run Tests
         run: |
-          export $(grep -v '^#' src/.env | xargs)  # Load .env variables
+          cd src
+          export $(grep -v '^#' .env | xargs)  # Load environment variables
           npm test
-        working-directory: src
