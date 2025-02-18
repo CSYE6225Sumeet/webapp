@@ -1,77 +1,63 @@
-name: Node.js-Test
+name: CI - Web App Tests with MySQL
 
 on:
-    pull_request:
-      branches: [ "main" ]
-    push:
-      branches: [ "main" ]
+  pull_request:
+    branches:
+      - main  # Run CI for PRs targeting the main branch
 
 jobs:
-  node-test:
-    runs-on: ubuntu-latest
+  jest-test:
+    runs-on: ubuntu-latest  # Use the latest Ubuntu environment
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ secrets.DB_ROOT_PASS }}
+          MYSQL_DATABASE: ${{ secrets.DB_NAME }}
+          MYSQL_USER: ${{ secrets.DB_USER }}
+          MYSQL_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
 
-      - name: Install MySQL
-        run: |
-          sudo apt update
-          sudo apt install -y mysql-server
-          sudo systemctl start mysql
-          sudo systemctl enable mysql
-
-      - name: Secure MySQL Root Authentication
-        run: |
-          echo "Updating MySQL root authentication..."
-          sudo mysql -u root <<_EOF_
-          ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '${{ secrets.DB_ROOT_PASSWORD }}';
-          FLUSH PRIVILEGES;
-          _EOF_
-
-      - name: Allow Root Login via TCP
-        run: |
-          echo "Updating MySQL root privileges..."
-          sudo mysql -u root -p"${{ secrets.DB_ROOT_PASSWORD }}" <<_EOF_
-          ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY '${{ secrets.DB_ROOT_PASSWORD }}';
-          GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;
-          FLUSH PRIVILEGES;
-          _EOF_
-
-      - name: Configure MySQL
-        run: |
-          echo "Creating MySQL user and database..."
-          sudo mysql -u root -p"${{ secrets.DB_ROOT_PASSWORD }}" -h 127.0.0.1 <<EOF
-          CREATE USER IF NOT EXISTS '${{ secrets.DB_USER }}'@'%' IDENTIFIED BY '${{ secrets.DB_PASSWORD }}';
-          CREATE DATABASE IF NOT EXISTS ${{ secrets.DB_NAME }};
-          GRANT ALL PRIVILEGES ON ${{ secrets.DB_NAME }}.* TO '${{ secrets.DB_USER }}'@'%';
-          FLUSH PRIVILEGES;
-          EOF
-          sudo systemctl restart mysql
-
-      - name: Configure Environment Variables
-        run: |
-          echo "Writing environment variables to src/.env file..."
-          touch src/.env
-          echo DB_Host=127.0.0.1 >> src/.env
-          echo DB_User=${{ secrets.DB_USER }} >> src/.env
-          echo DB_Pass=${{ secrets.DB_PASSWORD }} >> src/.env
-          echo DB_Name=${{ secrets.DB_NAME }} >> src/.env
-          echo DB_Port=${{ secrets.DB_PORT || '3306' }}" >> src/.env
-
-      - name: Install Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18
-          cache: 'npm'
+          node-version: '20'  # Adjust based on your project
 
       - name: Install Dependencies
         run: |
           cd src
-          npm install
+          npm install  # Use the package manager relevant to your project
+
+      - name: Wait for MySQL to be Ready
+        run: |
+          echo "Waiting for MySQL to be ready..."
+          for i in {1..30}; do
+            if mysqladmin ping -h 127.0.0.1 --silent; then
+              echo "MySQL is ready!"
+              break
+            fi
+            echo "Waiting for MySQL..."
+            sleep 2
+          done
+
+      - name: Initialize MySQL Database
+        run: |
+          mysql -h 127.0.0.1 -u${{ secrets.DB_USER }} -p${{ secrets.DB_PASSWORD }} -e "
+          CREATE DATABASE IF NOT EXISTS ${{ secrets.DB_NAME }};
+          FLUSH PRIVILEGES;"
 
       - name: Run Tests
         run: |
           cd src
-          export $(grep -v '^#' .env | xargs)  # Load environment variables
-          npm test
+          npm test  # Adjust this based on your framework
