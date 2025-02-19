@@ -1,15 +1,13 @@
 #!/bin/bash
 
-# Variables
-DB_NAME="health_check"
-DB_USER="webapp_user"
-DB_PASSWORD="StrongPassword123"  # Change this to a secure password
-DB_ROOT_PASS="Aak007lpice123@" # Change this to a secure root password
-GROUP_NAME="webappgroup"
-USER_NAME="webappuser"
-ZIP_FILE="$HOME/Sumeet_Rane_002304942_02.zip"
-APP_DIR="/opt/csye6225"
-LOG_FILE="/var/log/setup_webapp.log"
+# Load environment variables from .env file
+ENV_FILE="$HOME/config.env"
+if [ -f "$ENV_FILE" ]; then
+    source "$ENV_FILE"
+else
+    echo "Error: .env file not found at $ENV_FILE"
+    exit 1
+fi
 
 # Redirect output to log file
 #exec > >(tee -a "$LOG_FILE") 2>&1
