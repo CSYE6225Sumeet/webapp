@@ -3,11 +3,11 @@ name: CI - Web App Tests with MySQL
 on:
   pull_request:
     branches:
-      - main  # Run CI for PRs targeting the main branch
+      - main
 
 jobs:
   jest-test:
-    runs-on: ubuntu-latest  # Use the latest Ubuntu environment
+    runs-on: ubuntu-latest
 
     services:
       mysql:
