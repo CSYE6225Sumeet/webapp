@@ -6,7 +6,7 @@ packer {
       source  = "github.com/hashicorp/amazon"
     }
     googlecompute = {
-      version = ">= 1.2.8, <2.0.0"
+      version = ">= 1.0.0, <1.2.0"
       source  = "github.com/hashicorp/googlecompute"
     }
   }
