@@ -1,4 +1,3 @@
-# Define the required Packer plugins
 packer {
   required_plugins {
     amazon = {
@@ -12,7 +11,7 @@ packer {
   }
 }
 
-# Define user variables that reference environment variables
+# AWS Variables (now read from environment)
 variable "aws_region" {
   default = env("AWS_REGION")
 }
@@ -21,40 +20,55 @@ variable "aws_instance_type" {
   default = env("AWS_INSTANCE_TYPE")
 }
 
-variable "gcp_project_id" {
-  default = env("GCP_PROJECT_ID")
+variable "aws_access_key" {
+  default = env("AWS_ACCESS_KEY")
 }
 
-variable "gcp_zone" {
-  default = env("GCP_ZONE")
+variable "aws_secret_key" {
+  default = env("AWS_SECRET_ACCESS_KEY")
 }
 
+# Define the source AMI directly (also via env)
+variable "source_ami" {
+  default = env("SOURCE_AMI")
+}
+
+# Common Variables
 variable "ami_name_prefix" {
   default = env("AMI_NAME_PREFIX")
-}
-
-variable "gcp_image_family" {
-  default = env("GCP_IMAGE_FAMILY")
 }
 
 variable "ubuntu_ami_owner" {
   default = env("UBUNTU_AMI_OWNER")
 }
 
-# AWS Builder
+variable "db_name" {
+  default = env("DB_NAME")
+}
+
+variable "db_user" {
+  default = env("DB_USER")
+}
+
+variable "db_password" {
+  default = env("DB_PASSWORD")
+}
+
+variable "db_host" {
+  default = env("DB_HOST")
+}
+
+# AWS Builder for DEV AWS Account using source_ami
 source "amazon-ebs" "ubuntu" {
   ami_name      = "${var.ami_name_prefix}-{{timestamp}}"
   instance_type = var.aws_instance_type
   region        = var.aws_region
 
-  source_ami_filter {
-    filters = {
-      name                = "ubuntu/images/hvm-ssd/ubuntu-jammy-24.04-amd64-server-*"
-      virtualization-type = "hvm"
-    }
-    most_recent = true
-    owners      = [var.ubuntu_ami_owner]
-  }
+  # Use credentials from variables
+  access_key = var.aws_access_key
+  secret_key = var.aws_secret_key
+
+  source_ami = var.source_ami
 
   ssh_username = "ubuntu"
 
@@ -64,47 +78,42 @@ source "amazon-ebs" "ubuntu" {
   }
 
   launch_block_device_mappings {
-    device_name = "/dev/sda1"
-    volume_size = 20
+    delete_on_termination = true
+    device_name           = "/dev/sda1"
+    volume_size           = 20
+    volume_type           = "gp2"
   }
 
   # Ensure the image is private
   ami_groups = []
 }
 
-# GCP Builder
-source "googlecompute" "ubuntu" {
-  project_id    = var.gcp_project_id
-  machine_type  = "e2-micro"
-  source_image  = "ubuntu-2404-lts"
-  zone          = var.gcp_zone
-  image_name    = "${var.ami_name_prefix}-{{timestamp}}"
-  image_family  = var.gcp_image_family
-  image_project = "ubuntu-os-cloud"
-
-  # Make the image private
-  image_licenses = []
-}
-
-# Provisioner to Install MySQL
+# Provisioners to Install and Validate MySQL
 build {
-  sources = ["source.amazon-ebs.ubuntu", "source.googlecompute.ubuntu"]
+  sources = ["source.amazon-ebs.ubuntu"]
 
   provisioner "shell" {
-    inline = [
-      "sudo apt update",
-      "sudo apt install -y mysql-server",
-      "sudo systemctl enable mysql",
-      "sudo systemctl start mysql",
-      "sudo mysql_secure_installation",
-      "echo 'MySQL installed successfully!'"
-    ]
+    script = "./scripts/install-script.sh"
   }
 
-  # Validate MySQL Installation
+  provisioner "file" {
+    source      = "./webapp.zip"
+    destination = "/tmp/"
+  }
+
+  provisioner "file" {
+    source      = "./webapp.service"
+    destination = "/tmp/"
+  }
+
   provisioner "shell" {
-    inline = [
-      "mysql --version"
+    environment_vars = [
+    "DB_NAME=${var.db_name}",
+    "DB_USER=${var.db_user}",
+    "DB_PASSWORD=${var.db_password}",
+    "DB_HOST=${var.db_host}"
     ]
+
+    script = "./scripts/system-script.sh"
   }
 }
