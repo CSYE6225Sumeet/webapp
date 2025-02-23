@@ -50,12 +50,15 @@ jobs:
         run: cp webapp.zip ./src/packer/
 
       - name: Run packer init
+        working-directory: ./src/packer
         id: init
         run: packer init ./src/packer/packer.pkr.hcl
 
       - name: Run packer validate
+        working-directory: ./src/packer
         id: validate
         run: packer validate ./src/packer/packer.pkr.hcl
 
       - name: Build AMI
+        working-directory: ./src/packer
         run: packer build ./src/packer/packer.pkr.hcl
