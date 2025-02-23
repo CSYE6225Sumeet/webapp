@@ -1,0 +1,17 @@
+[Unit]
+Description = NodeJS Application
+ConditionPathExists=/opt/webapp/src/.env
+After=network.target
+
+[Service]
+Type=simple
+User=csye6225
+Group=csye6225
+WorkingDirectory=/opt/webapp/src
+ExecStart=/usr/bin/node /opt/webapp/src/app.js
+Restart=always
+RestartSec=10
+
+
+[Install]
+WantedBy=multi-user.target
