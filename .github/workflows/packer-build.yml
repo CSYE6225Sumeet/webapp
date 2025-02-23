@@ -1,0 +1,61 @@
+name: Packer Build
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+
+jobs:
+  build-ami:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    name: Packer Build
+    env:
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      AWS_INSTANCE_TYPE: ${{ secrets.AWS_INSTANCE_TYPE }}
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      SOURCE_AMI: ${{ secrets.SOURCE_AMI }}
+      AMI_NAME_PREFIX: ${{ secrets.AMI_NAME_PREFIX }}
+      UBUNTU_AMI_OWNER: ${{ secrets.UBUNTU_AMI_OWNER }}
+      DB_NAME: ${{ secrets.DB_NAME }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}
+      DB_HOST: ${{ secrets.DB_HOST }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup packer
+        uses: hashicorp/setup-packer@main
+        id: setup
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Create webapp.zip from existing directory
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y unzip
+          zip -r webapp.zip .
+        shell: bash
+
+      - name: Copy webapp.zip to packer directory
+        run: cp webapp.zip ./src/packer/
+
+      - name: Run packer init
+        id: init
+        run: packer init ./src/packer/packer.pkr.hcl
+
+      - name: Run packer validate
+        id: validate
+        run: packer validate ./src/packer/packer.pkr.hcl
+
+      - name: Build AMI
+        run: packer build ./src/packer/packer.pkr.hcl
