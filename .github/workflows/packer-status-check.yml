@@ -19,7 +19,7 @@ jobs:
       DB_USER: ${{ secrets.DB_USER }}
       DB_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}
       DB_HOST: ${{ secrets.DB_HOST }}
-      
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -28,6 +28,12 @@ jobs:
         uses: hashicorp/setup-packer@v2
         with:
           version: '1.12.0'
+
+      - name: Create webapp.zip from existing directory
+        run: |
+          zip -r webapp.zip .
+          cp -r webapp.zip src/packer
+        shell: bash
 
       - name: Check Packer format
         working-directory: src/packer
