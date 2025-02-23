@@ -52,13 +52,13 @@ jobs:
       - name: Run packer init
         working-directory: ./src/packer
         id: init
-        run: packer init ./src/packer/packer.pkr.hcl
+        run: packer init packer.pkr.hcl
 
       - name: Run packer validate
         working-directory: ./src/packer
         id: validate
-        run: packer validate ./src/packer/packer.pkr.hcl
+        run: packer validate packer.pkr.hcl
 
       - name: Build AMI
         working-directory: ./src/packer
-        run: packer build ./src/packer/packer.pkr.hcl
+        run: packer build packer.pkr.hcl
