@@ -7,6 +7,19 @@ on:
 jobs:
   packer-check:
     runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      AWS_INSTANCE_TYPE: ${{ secrets.AWS_INSTANCE_TYPE }}
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      SOURCE_AMI: ${{ secrets.SOURCE_AMI }}
+      AMI_NAME_PREFIX: ${{ secrets.AMI_NAME_PREFIX }}
+      UBUNTU_AMI_OWNER: ${{ secrets.UBUNTU_AMI_OWNER }}
+      DB_NAME: ${{ secrets.DB_NAME }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}
+      DB_HOST: ${{ secrets.DB_HOST }}
+      
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
