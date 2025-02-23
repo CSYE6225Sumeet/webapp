@@ -7,7 +7,7 @@ sudo apt-get update -y && sudo apt-get upgrade -y
 sudo apt-get install -y unzip
 sudo apt-get install -y mysql-server
 sudo systemctl enable --now mysql
-sudo mysql -e 'CREATE DATABASE mydatabase;'
+sudo mysql -e "CREATE DATABASE $DB_NAME;"
 sudo apt-get install -y nodejs
 sudo apt-get install -y npm
 sudo node -v
