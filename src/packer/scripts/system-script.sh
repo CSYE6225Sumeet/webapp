@@ -24,4 +24,4 @@ sudo npm install
 sudo chown csye6225:csye6225 node_modules
 
 sudo systemctl daemon-reload
-sudo systemctl enable csye6225-aws
+sudo systemctl enable webapp.service
