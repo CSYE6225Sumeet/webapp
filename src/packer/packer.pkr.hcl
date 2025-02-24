@@ -93,6 +93,12 @@ build {
   sources = ["source.amazon-ebs.ubuntu"]
 
   provisioner "shell" {
+    environment_vars = [
+      "DB_NAME=${var.db_name}",
+      # "DB_USER=${var.db_user}",
+      "DB_PASSWORD=${var.db_password}",
+      # "DB_HOST=${var.db_host}"
+    ]
     script = "./scripts/install-script.sh"
   }
 
