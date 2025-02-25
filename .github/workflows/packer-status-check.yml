@@ -32,6 +32,8 @@ jobs:
       DISK_SIZE: ${{ secrets.DISK_SIZE }}
       DISK_TYPE: ${{ secrets.DISK_TYPE }}
       GCP_CREDENTIALS_FILE: ${{ secrets.GCP_CREDENTIALS_FILE }}
+      GCP_DEMO_PROJECT_NUMBER: ${{ secrets.GCP_DEMO_PROJECT_NUMBER }}
+
 
     steps:
       - name: Checkout repository

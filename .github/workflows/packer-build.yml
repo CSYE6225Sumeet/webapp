@@ -11,6 +11,79 @@ jobs:
   build-ami:
     if: github.event.pull_request.merged == true
     runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}
+          MYSQL_DATABASE: ${{ secrets.DB_NAME }}
+          MYSQL_USER: ${{ secrets.DB_USER_1 }}
+          MYSQL_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          MYSQL_HOST: ${{ secrets.DB_HOST }}
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: |
+          cd src
+          npm install
+
+      - name: Wait for MySQL to be Ready
+        run: |
+          echo "Waiting for MySQL to be ready..."
+          for i in {1..30}; do
+            if mysqladmin ping -h 127.0.0.1 --silent; then
+              echo "MySQL is ready!"
+              break
+            fi
+            echo "Waiting for MySQL..."
+            sleep 2
+          done
+
+      - name: Debug MySQL Connection
+        run: |
+          mysql -h 127.0.0.1 -uroot -p${{ secrets.DB_ROOT_PASSWORD }} -e "SHOW DATABASES;"
+
+      - name: Initialize MySQL Database as Root
+        run: |
+          mysql -h 127.0.0.1 -uroot -p${{ secrets.DB_ROOT_PASSWORD }} <<EOF
+          CREATE DATABASE IF NOT EXISTS ${{ secrets.DB_NAME }};
+          CREATE USER IF NOT EXISTS '${{ secrets.DB_USER_1 }}'@'%' IDENTIFIED BY '${{ secrets.DB_PASSWORD }}';
+          GRANT ALL PRIVILEGES ON ${{ secrets.DB_NAME }}.* TO '${{ secrets.DB_USER_1 }}'@'%';
+          ALTER USER '${{ secrets.DB_USER_1 }}'@'%' IDENTIFIED WITH mysql_native_password BY '${{ secrets.DB_PASSWORD }}';
+          FLUSH PRIVILEGES;
+          EOF
+
+      - name: Set Environment Variables for Tests
+        run: |
+          echo "DB_NAME=${{ secrets.DB_NAME }}" >> src/.env
+          echo "DB_USER=${{ secrets.DB_USER_1 }}" >> src/.env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> src/.env
+          echo "DB_HOST=${{ secrets.DB_HOST }}" >> src/.env
+
+      - name: Run Tests
+        run: |
+          cd src
+          npm test
+
+  build-aws-ami:
+    needs: build-ami
+    runs-on: ubuntu-latest
     name: Packer Build
     env:
       AWS_REGION: ${{ secrets.AWS_REGION }}
@@ -37,6 +110,7 @@ jobs:
       DISK_SIZE: ${{ secrets.DISK_SIZE }}
       DISK_TYPE: ${{ secrets.DISK_TYPE }}
       GCP_CREDENTIALS_FILE: ${{ secrets.GCP_CREDENTIALS_FILE }}
+      GCP_DEMO_PROJECT_NUMBER: ${{ secrets.GCP_DEMO_PROJECT_NUMBER }}
 
     steps:
       - name: Checkout Code
@@ -83,3 +157,16 @@ jobs:
       - name: Build AMI
         working-directory: ./src/packer
         run: packer build packer.pkr.hcl
+
+      - name: Get Image Name
+        run: |
+          IMAGE_NAME=$(gcloud compute images list --project=${{ secrets.GCP_PROJECT_ID }} --sort-by=~creationTimestamp --limit=1 --format="value(NAME)")
+          echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
+ 
+      - name: Share Image with DEMO Project
+        run: |
+          echo "Sharing image $IMAGE_NAME with DEMO project"
+          gcloud compute images add-iam-policy-binding $IMAGE_NAME \
+            --project=${{ secrets.GCP_PROJECT_ID }} \
+            --member="serviceAccount:service-${{ secrets.GCP_DEMO_PROJECT_NUMBER }}@compute-system.iam.gserviceaccount.com" \
+            --role=roles/compute.imageUser
