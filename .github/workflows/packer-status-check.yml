@@ -7,16 +7,35 @@ on:
 jobs:
   packer-check:
     runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      AWS_INSTANCE_TYPE: ${{ secrets.AWS_INSTANCE_TYPE }}
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      SOURCE_AMI: ${{ secrets.SOURCE_AMI }}
+      AMI_NAME_PREFIX: ${{ secrets.AMI_NAME_PREFIX }}
+      UBUNTU_AMI_OWNER: ${{ secrets.UBUNTU_AMI_OWNER }}
+      DB_NAME: ${{ secrets.DB_NAME }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}
+      DB_HOST: ${{ secrets.DB_HOST }}
+      DEMO_ACCOUNT_ID: ${{ secrets.DEMO_ACCOUNT_ID }}
+      SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+      MACHINE_TYPE: ${{ secrets.MACHINE_TYPE }}
+      SOURCE_IMAGE_FAMILY: ${{ secrets.SOURCE_IMAGE_FAMILY }}
+      DELETE_ON_TERMINATION: ${{ secrets.DELETE_ON_TERMINATION }}
+      DEVICE_NAME: ${{ secrets.DEVICE_NAME }}
+      VOLUME_SIZE: ${{ secrets.VOLUME_SIZE }}
+      VOLUME_TYPE: ${{ secrets.VOLUME_TYPE }}
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      GCP_ZONE: ${{ secrets.GCP_ZONE }}
+      DISK_SIZE: ${{ secrets.DISK_SIZE }}
+      DISK_TYPE: ${{ secrets.DISK_TYPE }}
+      GCP_CREDENTIALS_FILE: ${{ secrets.GCP_CREDENTIALS_FILE }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-
-      - name: Create webapp.zip from existing directory
-        run: |
-          zip -r webapp.zip .
-          cp -r webapp.zip src/packer
-        shell: bash
 
       - name: Set up Packer
         uses: hashicorp/setup-packer@v2
@@ -30,15 +49,17 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Authenticate with Google Cloud
-        uses: google-github-actions/auth@v2
+      - name: Install and Configure gcloud CLI
+        uses: 'google-github-actions/auth@v2'
         with:
-          credentials_json: ${{ secrets.GCP_CREDENTIALS_FILE }}
+          credentials_json: '${{ secrets.GCP_CREDENTIALS_FILE }}'
+          export_default_credentials: true
 
-      - name: Set up Google Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
-        with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
+      - name: Create webapp.zip from existing directory
+        run: |
+          zip -r webapp.zip .
+          cp -r webapp.zip src/packer
+        shell: bash
 
       - name: Check Packer format
         working-directory: src/packer
@@ -50,33 +71,7 @@ jobs:
         run: |
           packer init .
 
-      - name: Packer Validate
+      - name: Validate Packer template
         working-directory: src/packer
-        env:
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          AWS_INSTANCE_TYPE: ${{ secrets.AWS_INSTANCE_TYPE }}
-          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          SOURCE_AMI: ${{ secrets.SOURCE_AMI }}
-          AMI_NAME_PREFIX: ${{ secrets.AMI_NAME_PREFIX }}
-          UBUNTU_AMI_OWNER: ${{ secrets.UBUNTU_AMI_OWNER }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DEMO_ACCOUNT_ID: ${{ secrets.DEMO_ACCOUNT_ID }}
-          SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
-          MACHINE_TYPE: ${{ secrets.MACHINE_TYPE }}
-          SOURCE_IMAGE_FAMILY: ${{ secrets.SOURCE_IMAGE_FAMILY }}
-          DELETE_ON_TERMINATION: ${{ secrets.DELETE_ON_TERMINATION }}
-          DEVICE_NAME: ${{ secrets.DEVICE_NAME }}
-          VOLUME_SIZE: ${{ secrets.VOLUME_SIZE }}
-          VOLUME_TYPE: ${{ secrets.VOLUME_TYPE }}
-          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-          GCP_ZONE: ${{ secrets.GCP_ZONE }}
-          DISK_SIZE: ${{ secrets.DISK_SIZE }}
-          DISK_TYPE: ${{ secrets.DISK_TYPE }}
-          GCP_CREDENTIALS_FILE: ${{ secrets.GCP_CREDENTIALS_FILE }}
-        run: packer validate packer.pkr.hcl
-
-
+        run: |
+          packer validate .

@@ -146,8 +146,7 @@ source "amazon-ebs" "ubuntu" {
 
 # GCP Builder
 source "googlecompute" "ubuntu" {
-  project_id = var.gcp_project_id
-  # image_family  = var.gcp_image_family
+  project_id          = var.gcp_project_id
   image_name          = "${var.ami_name_prefix}-{{timestamp}}"
   zone                = var.gcp_zone
   ssh_username        = var.ssh_username
