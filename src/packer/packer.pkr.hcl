@@ -154,7 +154,7 @@ source "googlecompute" "ubuntu" {
   source_image_family = var.source_image_family
   disk_size           = var.disk_size
   disk_type           = var.disk_type
-  credentials_file    = var.gcp_credentials_file
+  # credentials_file    = var.gcp_credentials_file
 
   # service_account_email = "github-actions@dev-gcp-451802.iam.gserviceaccount.com"
 
