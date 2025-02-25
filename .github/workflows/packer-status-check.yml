@@ -31,13 +31,19 @@ jobs:
       GCP_ZONE: ${{ secrets.GCP_ZONE }}
       DISK_SIZE: ${{ secrets.DISK_SIZE }}
       DISK_TYPE: ${{ secrets.DISK_TYPE }}
-      # GCP_CREDENTIALS_FILE: ${{ secrets.GCP_CREDENTIALS_FILE }}
+      # Initially set from secret; we'll override it for packer to use the file.
       GCP_CREDENTIALS_FILE: ${{ secrets.GCP_CREDENTIALS_FILE }}
-      
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+
+      - name: Create GCP credentials file in src/packer
+        run: |
+          mkdir -p src/packer
+          echo "${{ secrets.GCP_CREDENTIALS_FILE }}" > src/packer/gcp_credentials.json
+          # Set the variable so that Packer (running in src/packer) points to the local file
+          echo "GCP_CREDENTIALS_FILE=./gcp_credentials.json" >> $GITHUB_ENV
 
       - name: Set up Packer
         uses: hashicorp/setup-packer@v2
@@ -64,26 +70,17 @@ jobs:
       - name: Create webapp.zip from existing directory
         run: |
           zip -r webapp.zip .
-          cp -r webapp.zip src/packer
+          cp webapp.zip src/packer
         shell: bash
-
-      # - name: Create GCP credentials file
-      #   run: |
-      #     cd src/packer
-      #     echo "${{ secrets.GCP_CREDENTIALS_FILE }}" > gcp_credentials.json
-      #     echo "GCP_CREDENTIALS_FILE=./gcp_credentials.json" >> $GITHUB_ENV
 
       - name: Check Packer format
         working-directory: src/packer
-        run: |
-          packer fmt -check .
+        run: packer fmt -check .
 
       - name: Initialize Packer template
         working-directory: src/packer
-        run: |
-          packer init .
+        run: packer init .
 
       - name: Validate Packer template
         working-directory: src/packer
-        run: |
-          packer validate .
+        run: packer validate .
