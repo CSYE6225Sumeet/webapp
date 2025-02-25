@@ -31,19 +31,11 @@ jobs:
       GCP_ZONE: ${{ secrets.GCP_ZONE }}
       DISK_SIZE: ${{ secrets.DISK_SIZE }}
       DISK_TYPE: ${{ secrets.DISK_TYPE }}
-      # Initially set from secret; we'll override it for packer to use the file.
       GCP_CREDENTIALS_FILE: ${{ secrets.GCP_CREDENTIALS_FILE }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-
-      - name: Create GCP credentials file in src/packer
-        run: |
-          mkdir -p src/packer
-          echo "${{ secrets.GCP_CREDENTIALS_FILE }}" > src/packer/gcp_credentials.json
-          # Set the variable so that Packer (running in src/packer) points to the local file
-          echo "GCP_CREDENTIALS_FILE=./gcp_credentials.json" >> $GITHUB_ENV
 
       - name: Set up Packer
         uses: hashicorp/setup-packer@v2
@@ -70,8 +62,37 @@ jobs:
       - name: Create webapp.zip from existing directory
         run: |
           zip -r webapp.zip .
-          cp webapp.zip src/packer
+          cp -r webapp.zip src/packer
         shell: bash
+
+      - name: Create Pkrvars file in src/packer
+        working-directory: src/packer
+        run: |
+          cat <<EOF > packer.pkrvars.hcl
+          aws_region = "${{ secrets.AWS_REGION }}"
+          aws_instance_type = "${{ secrets.AWS_INSTANCE_TYPE }}"
+          aws_access_key = "${{ secrets.AWS_ACCESS_KEY }}"
+          aws_secret_key = "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+          source_ami = "${{ secrets.SOURCE_AMI }}"
+          ami_name_prefix = "${{ secrets.AMI_NAME_PREFIX }}"
+          ubuntu_ami_owner = "${{ secrets.UBUNTU_AMI_OWNER }}"
+          db_name = "${{ secrets.DB_NAME }}"
+          db_user = "${{ secrets.DB_USER }}"
+          db_password = "${{ secrets.DB_ROOT_PASSWORD }}"
+          db_host = "${{ secrets.DB_HOST }}"
+          demo_account_id = "${{ secrets.DEMO_ACCOUNT_ID }}"
+          ssh_username = "${{ secrets.SSH_USERNAME }}"
+          machine_type = "${{ secrets.MACHINE_TYPE }}"
+          source_image_family = "${{ secrets.SOURCE_IMAGE_FAMILY }}"
+          delete_on_termination = "${{ secrets.DELETE_ON_TERMINATION }}"
+          device_name = "${{ secrets.DEVICE_NAME }}"
+          volume_size = "${{ secrets.VOLUME_SIZE }}"
+          volume_type = "${{ secrets.VOLUME_TYPE }}"
+          gcp_project_id = "${{ secrets.GCP_PROJECT_ID }}"
+          gcp_zone = "${{ secrets.GCP_ZONE }}"
+          disk_size = "${{ secrets.DISK_SIZE }}"
+          disk_type = "${{ secrets.DISK_TYPE }}"
+          EOF
 
       - name: Check Packer format
         working-directory: src/packer
@@ -83,4 +104,4 @@ jobs:
 
       - name: Validate Packer template
         working-directory: src/packer
-        run: packer validate .
+        run: packer validate --var-file=packer.pkrvars.hcl .
