@@ -31,8 +31,9 @@ jobs:
       GCP_ZONE: ${{ secrets.GCP_ZONE }}
       DISK_SIZE: ${{ secrets.DISK_SIZE }}
       DISK_TYPE: ${{ secrets.DISK_TYPE }}
+      # GCP_CREDENTIALS_FILE: ${{ secrets.GCP_CREDENTIALS_FILE }}
       GCP_CREDENTIALS_FILE: ${{ secrets.GCP_CREDENTIALS_FILE }}
-      # GCP_CREDENTIALS_FILE: /tmp/gcp-creds.json
+      
 
     steps:
       - name: Checkout repository
@@ -49,8 +50,11 @@ jobs:
           cp -r webapp.zip src/packer
         shell: bash
 
-      # - name: Create GCP credentials file
-      #   run: echo "${{ secrets.GCP_CREDENTIALS_FILE }}" > /tmp/gcp-creds.json
+      - name: Create GCP credentials file
+        run: |
+          cd src/packer
+          echo "${{ secrets.GCP_CREDENTIALS_FILE }}" > gcp_credentials.json
+          echo "GCP_CREDENTIALS_FILE=./gcp_credentials.json" >> $GITHUB_ENV
 
       - name: Check Packer format
         working-directory: src/packer
