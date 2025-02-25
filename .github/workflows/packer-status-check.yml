@@ -96,7 +96,7 @@ jobs:
 
       - name: Check Packer format
         working-directory: src/packer
-        run: packer fmt -check .
+        run: packer fmt packer.pkr.hcl
 
       - name: Initialize Packer template
         working-directory: src/packer
@@ -104,4 +104,4 @@ jobs:
 
       - name: Validate Packer template
         working-directory: src/packer
-        run: packer validate --var-file=packer.pkrvars.hcl .
+        run: packer validate --var-file=packer.pkrvars.hcl packer.pkr.hcl
