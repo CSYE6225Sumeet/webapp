@@ -7,35 +7,16 @@ on:
 jobs:
   packer-check:
     runs-on: ubuntu-latest
-    env:
-      AWS_REGION: ${{ secrets.AWS_REGION }}
-      AWS_INSTANCE_TYPE: ${{ secrets.AWS_INSTANCE_TYPE }}
-      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      SOURCE_AMI: ${{ secrets.SOURCE_AMI }}
-      AMI_NAME_PREFIX: ${{ secrets.AMI_NAME_PREFIX }}
-      UBUNTU_AMI_OWNER: ${{ secrets.UBUNTU_AMI_OWNER }}
-      DB_NAME: ${{ secrets.DB_NAME }}
-      DB_USER: ${{ secrets.DB_USER }}
-      DB_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}
-      DB_HOST: ${{ secrets.DB_HOST }}
-      DEMO_ACCOUNT_ID: ${{ secrets.DEMO_ACCOUNT_ID }}
-      SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
-      MACHINE_TYPE: ${{ secrets.MACHINE_TYPE }}
-      SOURCE_IMAGE_FAMILY: ${{ secrets.SOURCE_IMAGE_FAMILY }}
-      DELETE_ON_TERMINATION: ${{ secrets.DELETE_ON_TERMINATION }}
-      DEVICE_NAME: ${{ secrets.DEVICE_NAME }}
-      VOLUME_SIZE: ${{ secrets.VOLUME_SIZE }}
-      VOLUME_TYPE: ${{ secrets.VOLUME_TYPE }}
-      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-      GCP_ZONE: ${{ secrets.GCP_ZONE }}
-      DISK_SIZE: ${{ secrets.DISK_SIZE }}
-      DISK_TYPE: ${{ secrets.DISK_TYPE }}
-      GCP_CREDENTIALS_FILE: ${{ secrets.GCP_CREDENTIALS_FILE }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+
+      - name: Create webapp.zip from existing directory
+        run: |
+          zip -r webapp.zip .
+          cp -r webapp.zip src/packer
+        shell: bash
 
       - name: Set up Packer
         uses: hashicorp/setup-packer@v2
@@ -50,58 +31,51 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
 
       - name: Authenticate with Google Cloud
-        uses: google-github-actions/auth@v1
+        uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_CREDENTIALS_FILE }}
 
       - name: Set up Google Cloud SDK
-        uses: google-github-actions/setup-gcloud@v1
+        uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
 
-      - name: Create webapp.zip from existing directory
-        run: |
-          zip -r webapp.zip .
-          cp -r webapp.zip src/packer
-        shell: bash
-
-      - name: Create Pkrvars file in src/packer
-        working-directory: src/packer
-        run: |
-          cat <<EOF > packer.pkrvars.hcl
-          aws_region = "${{ secrets.AWS_REGION }}"
-          aws_instance_type = "${{ secrets.AWS_INSTANCE_TYPE }}"
-          aws_access_key = "${{ secrets.AWS_ACCESS_KEY }}"
-          aws_secret_key = "${{ secrets.AWS_SECRET_ACCESS_KEY }}"
-          source_ami = "${{ secrets.SOURCE_AMI }}"
-          ami_name_prefix = "${{ secrets.AMI_NAME_PREFIX }}"
-          ubuntu_ami_owner = "${{ secrets.UBUNTU_AMI_OWNER }}"
-          db_name = "${{ secrets.DB_NAME }}"
-          db_user = "${{ secrets.DB_USER }}"
-          db_password = "${{ secrets.DB_ROOT_PASSWORD }}"
-          db_host = "${{ secrets.DB_HOST }}"
-          demo_account_id = "${{ secrets.DEMO_ACCOUNT_ID }}"
-          ssh_username = "${{ secrets.SSH_USERNAME }}"
-          machine_type = "${{ secrets.MACHINE_TYPE }}"
-          source_image_family = "${{ secrets.SOURCE_IMAGE_FAMILY }}"
-          delete_on_termination = "${{ secrets.DELETE_ON_TERMINATION }}"
-          device_name = "${{ secrets.DEVICE_NAME }}"
-          volume_size = "${{ secrets.VOLUME_SIZE }}"
-          volume_type = "${{ secrets.VOLUME_TYPE }}"
-          gcp_project_id = "${{ secrets.GCP_PROJECT_ID }}"
-          gcp_zone = "${{ secrets.GCP_ZONE }}"
-          disk_size = "${{ secrets.DISK_SIZE }}"
-          disk_type = "${{ secrets.DISK_TYPE }}"
-          EOF
-
       - name: Check Packer format
         working-directory: src/packer
-        run: packer fmt packer.pkr.hcl
+        run: |
+          packer fmt -check .
 
       - name: Initialize Packer template
         working-directory: src/packer
-        run: packer init .
+        run: |
+          packer init .
 
-      - name: Validate Packer template
-        working-directory: src/packer
-        run: packer validate --var-file=packer.pkrvars.hcl packer.pkr.hcl
+      - name: Packer Validate
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_INSTANCE_TYPE: ${{ secrets.AWS_INSTANCE_TYPE }}
+          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          SOURCE_AMI: ${{ secrets.SOURCE_AMI }}
+          AMI_NAME_PREFIX: ${{ secrets.AMI_NAME_PREFIX }}
+          UBUNTU_AMI_OWNER: ${{ secrets.UBUNTU_AMI_OWNER }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DEMO_ACCOUNT_ID: ${{ secrets.DEMO_ACCOUNT_ID }}
+          SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+          MACHINE_TYPE: ${{ secrets.MACHINE_TYPE }}
+          SOURCE_IMAGE_FAMILY: ${{ secrets.SOURCE_IMAGE_FAMILY }}
+          DELETE_ON_TERMINATION: ${{ secrets.DELETE_ON_TERMINATION }}
+          DEVICE_NAME: ${{ secrets.DEVICE_NAME }}
+          VOLUME_SIZE: ${{ secrets.VOLUME_SIZE }}
+          VOLUME_TYPE: ${{ secrets.VOLUME_TYPE }}
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          GCP_ZONE: ${{ secrets.GCP_ZONE }}
+          DISK_SIZE: ${{ secrets.DISK_SIZE }}
+          DISK_TYPE: ${{ secrets.DISK_TYPE }}
+          GCP_CREDENTIALS_FILE: ${{ secrets.GCP_CREDENTIALS_FILE }}
+        run: packer validate packer.pkr.hcl
+
+
