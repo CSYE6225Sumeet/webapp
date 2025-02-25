@@ -80,6 +80,9 @@ web_modules/
 .env.local
 config.env
 
+# packer pkrvars file
+variables.pkrvars.hcl
+
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache
@@ -129,3 +132,9 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# zip file for test
+webapp.zip
+
+#gcp-credential-file
+gitactions-dev-gcp.json

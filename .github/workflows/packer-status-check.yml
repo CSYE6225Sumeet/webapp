@@ -19,6 +19,19 @@ jobs:
       DB_USER: ${{ secrets.DB_USER }}
       DB_PASSWORD: ${{ secrets.DB_ROOT_PASSWORD }}
       DB_HOST: ${{ secrets.DB_HOST }}
+      DEMO_ACCOUNT_ID: ${{ secrets.DEMO_ACCOUNT_ID }}
+      SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+      MACHINE_TYPE: ${{ secrets.MACHINE_TYPE }}
+      SOURCE_IMAGE_FAMILY: ${{ secrets.SOURCE_IMAGE_FAMILY }}
+      DELETE_ON_TERMINATION: ${{ secrets.DELETE_ON_TERMINATION }}
+      DEVICE_NAME: ${{ secrets.DEVICE_NAME }}
+      VOLUME_SIZE: ${{ secrets.VOLUME_SIZE }}
+      VOLUME_TYPE: ${{ secrets.VOLUME_TYPE }}
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      GCP_ZONE: ${{ secrets.GCP_ZONE }}
+      DISK_SIZE: ${{ secrets.DISK_SIZE }}
+      DISK_TYPE: ${{ secrets.DISK_TYPE }}
+      GCP_CREDENTIALS_FILE: ${{ secrets.GCP_CREDENTIALS_FILE }}
 
     steps:
       - name: Checkout repository
