@@ -58,6 +58,60 @@ variable "db_host" {
   default = env("DB_HOST")
 }
 
+variable "demo_account_id" {
+  default = env("DEMO_ACCOUNT_ID")
+}
+
+variable "ssh_username" {
+  default = env("SSH_USERNAME")
+}
+
+variable "machine_type" {
+  default = env("MACHINE_TYPE")
+}
+
+variable "source_image_family" {
+  default = env("SOURCE_IMAGE_FAMILY")
+}
+
+#---
+variable "delete_on_termination" {
+  default = env("DELETE_ON_TERMINATION")
+}
+
+variable "device_name" {
+  default = env("DEVICE_NAME")
+}
+
+variable "volume_size" {
+  default = env("VOLUME_SIZE")
+}
+
+variable "volume_type" {
+  default = env("VOLUME_TYPE")
+}
+
+variable "gcp_project_id" {
+  default = env("GCP_PROJECT_ID")
+}
+
+variable "gcp_zone" {
+  default = env("GCP_ZONE")
+}
+
+variable "disk_size" {
+  default = env("DISK_SIZE")
+}
+
+variable "disk_type" {
+  default = env("DISK_TYPE")
+}
+
+variable "gcp_credentials_file" {
+  default = env("GCP_CREDENTIALS_FILE")
+}
+
+
 # AWS Builder for DEV AWS Account using source_ami
 source "amazon-ebs" "ubuntu" {
   ami_name      = "${var.ami_name_prefix}-{{timestamp}}"
@@ -70,7 +124,7 @@ source "amazon-ebs" "ubuntu" {
 
   source_ami = var.source_ami
 
-  ssh_username = "ubuntu"
+  ssh_username = var.ssh_username
 
   tags = {
     Name        = "Custom Ubuntu Image"
@@ -78,19 +132,40 @@ source "amazon-ebs" "ubuntu" {
   }
 
   launch_block_device_mappings {
-    delete_on_termination = true
-    device_name           = "/dev/sda1"
-    volume_size           = 20
-    volume_type           = "gp2"
+    delete_on_termination = var.delete_on_termination
+    device_name           = var.device_name
+    volume_size           = var.volume_size
+    volume_type           = var.volume_type
   }
+
+  ami_users = [var.demo_account_id]
 
   # Ensure the image is private
   ami_groups = []
 }
 
+# GCP Builder
+source "googlecompute" "ubuntu" {
+  project_id          = var.gcp_project_id
+  image_name          = "${var.ami_name_prefix}-{{timestamp}}"
+  zone                = var.gcp_zone
+  ssh_username        = var.ssh_username
+  machine_type        = var.machine_type
+  source_image_family = var.source_image_family
+  disk_size           = var.disk_size
+  disk_type           = var.disk_type
+  # credentials_file    = var.gcp_credentials_file
+
+  # service_account_email = "github-actions@dev-gcp-451802.iam.gserviceaccount.com"
+
+  # Make the image private
+  image_licenses = []
+}
+
+
 # Provisioners to Install and Validate MySQL
 build {
-  sources = ["source.amazon-ebs.ubuntu"]
+  sources = ["source.amazon-ebs.ubuntu", "source.googlecompute.ubuntu", ]
 
   provisioner "shell" {
     environment_vars = [
