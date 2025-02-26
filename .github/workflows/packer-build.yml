@@ -168,5 +168,6 @@ jobs:
           echo "Sharing image $IMAGE_NAME with DEMO project"
           gcloud compute images add-iam-policy-binding $IMAGE_NAME \
             --project=${{ secrets.GCP_PROJECT_ID }} \
-            --member="serviceAccount:service-${{ secrets.GCP_DEMO_PROJECT_NUMBER }}@compute-system.iam.gserviceaccount.com" \
+            --member="serviceAccount:${{ secrets.GCP_DEMO_PROJECT_NUMBER }}-compute@developer.gserviceaccount.com" \
             --role=roles/compute.imageUser
+
