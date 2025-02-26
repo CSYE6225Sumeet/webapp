@@ -114,4 +114,17 @@ bash setup_web.sh
 ### GitHub Workflow CI
 We have implemented Continuous Integration (CI) using GitHub Actions to ensure code quality and prevent faulty code from being merged into the main branch.
 
-#
+### Created AMIs with Packer
+
+
+### Packer Format And Validate
+```bash
+packer fmt
+packer init
+packer validate
+```
+
+### Packer Build
+```bash
+packer build
+```
