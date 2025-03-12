@@ -148,7 +148,7 @@ source "amazon-ebs" "ubuntu" {
 source "googlecompute" "ubuntu" {
   project_id          = var.gcp_project_id
   image_name          = "${var.ami_name_prefix}-{{timestamp}}"
-  zone                = var.gcp_zone
+  zone                = var.gcp_zone1
   ssh_username        = var.ssh_username
   machine_type        = var.machine_type
   source_image_family = var.source_image_family
