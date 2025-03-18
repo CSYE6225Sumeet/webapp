@@ -5,9 +5,8 @@ sudo useradd csye6225 --shell /usr/sbin/nologin -g csye6225
 sudo cp /tmp/webapp.service /etc/systemd/system/
 sudo cp /tmp/webapp.zip /opt/
 sudo unzip /opt/webapp.zip -d /opt/webapp
-
+cd /opt/webapp/src
 #--------------------------------------
-# cd /opt/webapp/src
 
 # env_values=$(cat <<END
 # DB_NAME=$DB_NAME
