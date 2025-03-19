@@ -2,6 +2,7 @@ const express = require('express');
 const sequelize = require('./config/database');
 const { rejectPayloads, rejectQueryParams, setCommonHeaders } = require('./middleware');
 const healthCheckRouter = require('./routers/healthCheckRouter');
+const imagerouter = require('./routers/image-router');
 
 const app = express();
 
@@ -18,12 +19,16 @@ sequelize
   });
 
 // Middleware
-app.use(rejectPayloads);
-app.use(rejectQueryParams);
+// app.use(rejectPayloads);
+// app.use(rejectQueryParams);
 app.use(setCommonHeaders);
+// app.use(express.json());
+// app.use(express.urlencoded({ extended: true }));
 
 // Routes
-app.use(healthCheckRouter);
+app.use('/healthz', rejectPayloads, rejectQueryParams, healthCheckRouter);
+// app.use(healthCheckRouter);
+app.use('/v1/file', imagerouter);
 
 // Start the server
 const server = app.listen(8080, () => {
