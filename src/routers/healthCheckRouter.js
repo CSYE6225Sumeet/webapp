@@ -3,7 +3,8 @@ const { healthCheck, methodNotAllowed } = require('../controllers/healthCheckCon
 
 const router = express.Router();
 
-router.get('/healthz', healthCheck);
-router.all('/healthz', methodNotAllowed);
+router.head('/', methodNotAllowed); //Explicitly block head
+router.get('/', healthCheck);
+router.all('/', methodNotAllowed);
 
 module.exports = router;
