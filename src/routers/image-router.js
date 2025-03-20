@@ -9,7 +9,7 @@ const router = express.Router();
 // Ensure `multer` properly processes file uploads
 const upload = multer({
     storage: multer.memoryStorage(), // Store file in memory before uploading to S3
-    limits: { fileSize: 10 * 1024 * 1024 }, // Limit file size (10MB)
+    // limits: { fileSize: 10 * 1024 * 1024 }, // Limit file size (10MB)
 });
 
 // console.log('------------------Inside Router--------------------------------')
