@@ -1,5 +1,5 @@
 const methodRestrictor = {
-    badRequest: (req, res) => res.status(400).json({ error: 'Bad Request' }),
+    badRequest: (req, res) => res.status(400).send(),
     methodNotAllowed: (req, res) => res.status(405).send()
 };
 
