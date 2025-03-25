@@ -28,8 +28,8 @@ sudo chown csye6225:csye6225 node_modules
 # CloudWatch 
 sudo mkdir -p /opt/webapp/logs
 sudo chown -R csye6225:csye6225 /opt/webapp/logs
-sudo mv /tmp/cloudwatch-config.json /opt/cloudwatch-config.json
-sudo chown csye6225:csye6225 /opt/cloudwatch-config.json
+sudo mv /tmp/cloudwatch-config.json /opt/aws/amazon-cloudwatch-agent/bin/cloudwatch-config.json
+sudo chown csye6225:csye6225 /opt/aws/amazon-cloudwatch-agent/bin/cloudwatch-config.json
 
 sudo systemctl daemon-reload
 sudo systemctl enable webapp.service

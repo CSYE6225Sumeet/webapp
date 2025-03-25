@@ -41,4 +41,8 @@ sudo apt-get install -y nodejs
 sudo apt-get install -y npm
 sudo node -v
 sudo npm -v
-echo 'MySQL installed, server enabled, and database created successfully!'
+
+wget https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
+sudo dpkg -i -E ./amazon-cloudwatch-agent.deb
+
+echo 'Installed NodeJS & CloudWatch Agent Successfully!!'
