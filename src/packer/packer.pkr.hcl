@@ -145,27 +145,27 @@ source "amazon-ebs" "ubuntu" {
 }
 
 # GCP Builder
-source "googlecompute" "ubuntu" {
-  project_id          = var.gcp_project_id
-  image_name          = "${var.ami_name_prefix}-{{timestamp}}"
-  zone                = var.gcp_zone
-  ssh_username        = var.ssh_username
-  machine_type        = var.machine_type
-  source_image_family = var.source_image_family
-  disk_size           = var.disk_size
-  disk_type           = var.disk_type
-  # credentials_file    = var.gcp_credentials_file
+# source "googlecompute" "ubuntu" {
+#   project_id          = var.gcp_project_id
+#   image_name          = "${var.ami_name_prefix}-{{timestamp}}"
+#   zone                = var.gcp_zone
+#   ssh_username        = var.ssh_username
+#   machine_type        = var.machine_type
+#   source_image_family = var.source_image_family
+#   disk_size           = var.disk_size
+#   disk_type           = var.disk_type
+#   # credentials_file    = var.gcp_credentials_file
 
-  # service_account_email = "github-actions@dev-gcp-451802.iam.gserviceaccount.com"
+#   # service_account_email = "github-actions@dev-gcp-451802.iam.gserviceaccount.com"
 
-  # Make the image private
-  image_licenses = []
-}
+#   # Make the image private
+#   image_licenses = []
+# }
 
 
 # Provisioners to Install and Validate MySQL
 build {
-  sources = ["source.amazon-ebs.ubuntu", "source.googlecompute.ubuntu", ]
+  sources = ["source.amazon-ebs.ubuntu", ]
 
   provisioner "shell" {
     environment_vars = [
