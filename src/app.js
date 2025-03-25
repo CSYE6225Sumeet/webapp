@@ -2,7 +2,7 @@ const express = require('express');
 const sequelize = require('./config/database');
 const { rejectPayloads, rejectQueryParams, setCommonHeaders } = require('./middleware');
 const healthCheckRouter = require('./routers/healthCheckRouter');
-const imagerouter = require('./routers/image-router');
+const imagerouter = require('./routers/fileRouter');
 
 const app = express();
 
