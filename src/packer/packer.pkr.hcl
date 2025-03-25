@@ -187,6 +187,11 @@ build {
     destination = "/tmp/"
   }
 
+  provisioner "file" {
+    source      = "./cloudwatch-config.json"
+    destination = "/tmp/"
+  }
+
   provisioner "shell" {
     environment_vars = [
       "DB_NAME=${var.db_name}",

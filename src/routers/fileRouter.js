@@ -1,6 +1,6 @@
 const express = require('express');
 const multer = require('multer');
-const fileController = require('../controllers/image-controller');
+const fileController = require('../controllers/fileController');
 const methodRestrictor = require('../middleware/method-restrictor');
 
 const router = express.Router();
