@@ -12,12 +12,12 @@ const performHealthCheck = async () => {
     const dbDuration = Date.now() - dbStart;
 
     statsd.timing('db.healthcheck.insert.latency', dbDuration);
-    statsd.increment('api.healthcheck.count');
-    statsd.timing('api.healthcheck.latency', Date.now() - apiStart);
+    // statsd.increment('api.healthcheck.count');
+    // statsd.timing('api.healthcheck.latency', Date.now() - apiStart);
 
     logger.info('Health check successful');
   } catch (error) {
-    statsd.increment('api.healthcheck.error');
+    // statsd.increment('api.healthcheck.error');
     logger.error('Health check failed', {
       error: error.message,
       stack: error.stack
