@@ -2,14 +2,15 @@ const express = require('express');
 const multer = require('multer');
 const fileController = require('../controllers/fileController');
 const methodRestrictor = require('../middleware/method-restrictor');
+const metricsMiddleware = require('../middleware/metricsMiddleware');
 
 const router = express.Router();
-// const upload = multer();
+router.use(metricsMiddleware);
+
 
 // Ensure `multer` properly processes file uploads
 const upload = multer({
     storage: multer.memoryStorage(), // Store file in memory before uploading to S3
-    // limits: { fileSize: 10 * 1024 * 1024 }, // Limit file size (10MB)
 });
 
 // console.log('------------------Inside Router--------------------------------')

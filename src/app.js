@@ -19,11 +19,7 @@ sequelize
   });
 
 // Middleware
-// app.use(rejectPayloads);
-// app.use(rejectQueryParams);
 app.use(setCommonHeaders);
-// app.use(express.json());
-// app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/healthz', rejectPayloads, rejectQueryParams, healthCheckRouter);
