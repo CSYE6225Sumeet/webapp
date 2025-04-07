@@ -25,7 +25,7 @@ const getFile = async (req, res) => {
         logger.info(`Fetching file metadata for ID: ${req.params.id}`);
         const file = await fileService.getFile(req.params.id);
         if (!file) {
-            logger.warn(`File not found: ${req.params.id}`);
+            logger.warn(`File not found during /GET: ${req.params.id}`);
             return res.status(404).send();
         }
         res.json(file);
