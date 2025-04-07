@@ -224,7 +224,7 @@ jobs:
       - name: Wait for Instance Refresh to Complete
         run: |
           STATUS=""
-          for i in {1..30}; do
+          while true; do
             STATUS=$(aws autoscaling describe-instance-refreshes \
               --auto-scaling-group-name ${{ secrets.ASG_NAME }} \
               --instance-refresh-ids ${{ steps.refresh.outputs.refresh_id }} \
@@ -233,7 +233,8 @@ jobs:
 
             echo "Current status: $STATUS"
             if [[ "$STATUS" == "Successful" ]]; then
-              exit 0
+              echo "Instance refresh completed successfully."
+              break
             elif [[ "$STATUS" == "Cancelled" || "$STATUS" == "Failed" ]]; then
               echo "Instance refresh failed or was cancelled."
               exit 1
