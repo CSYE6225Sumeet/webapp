@@ -4,6 +4,12 @@ echo set debconf to Noninteractive
 echo 'debconf debconf/frontend select Noninteractive' | sudo debconf-set-selections
 sudo apt-get update -y && sudo apt-get upgrade -y
 sudo apt-get install -y unzip
+sudo apt-get install -y jq
+
+# Install AWS CLI 
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip awscliv2.zip
+sudo ./aws/install
 
 #----------
 # sudo apt-get install -y mysql-server
