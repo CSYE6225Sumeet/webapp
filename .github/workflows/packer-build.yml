@@ -173,75 +173,75 @@ jobs:
 
       # -------------------- INSTANCE REFRESH UPDATE -----------------------
       
-      # - name: Get Latest AMI ID
-      #   id: ami_id
-      #   run: |
-      #     AMI_ID=$(aws ec2 describe-images \
-      #       --owners ${{ secrets.AWS_ACCOUNT_ID }} \
-      #       --filters "Name=name,Values=${{ secrets.AMI_NAME_PREFIX }}*" \
-      #       --query 'Images | sort_by(@, &CreationDate) | [-1].ImageId' \
-      #       --output text)
-      #     echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
-      #     echo "ami_id=$AMI_ID" >> $GITHUB_OUTPUT
+      - name: Get Latest AMI ID
+        id: ami_id
+        run: |
+          AMI_ID=$(aws ec2 describe-images \
+            --owners ${{ secrets.AWS_ACCOUNT_ID }} \
+            --filters "Name=name,Values=${{ secrets.AMI_NAME_PREFIX }}*" \
+            --query 'Images | sort_by(@, &CreationDate) | [-1].ImageId' \
+            --output text)
+          echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
+          echo "ami_id=$AMI_ID" >> $GITHUB_OUTPUT
 
-      # - name: Share AMI with DEMO Account
-      #   run: |
-      #     aws ec2 modify-image-attribute \
-      #       --image-id ${{ steps.ami_id.outputs.ami_id }} \
-      #       --launch-permission "Add=[{UserId=${{ secrets.DEMO_ACCOUNT_ID }}}]"
+      - name: Share AMI with DEMO Account
+        run: |
+          aws ec2 modify-image-attribute \
+            --image-id ${{ steps.ami_id.outputs.ami_id }} \
+            --launch-permission "Add=[{UserId=${{ secrets.DEMO_ACCOUNT_ID }}}]"
 
-      # - name: Reconfigure AWS CLI for DEMO account
-      #   uses: aws-actions/configure-aws-credentials@v2
-      #   with:
-      #     aws-access-key-id: ${{ secrets.DEMO_AWS_ACCESS_KEY }}
-      #     aws-secret-access-key: ${{ secrets.DEMO_AWS_SECRET_ACCESS_KEY }}
-      #     aws-region: ${{ secrets.AWS_REGION }}
+      - name: Reconfigure AWS CLI for DEMO account
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.DEMO_AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ secrets.DEMO_AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-      # - name: Create New Launch Template Version
-      #   id: lt_version
-      #   run: |
-      #     NEW_VERSION=$(aws ec2 create-launch-template-version \
-      #       --launch-template-id ${{ secrets.LAUNCH_TEMPLATE_ID }} \
-      #       --source-version 1 \
-      #       --launch-template-data "{\"ImageId\":\"${{ steps.ami_id.outputs.ami_id }}\"}" \
-      #       --query 'LaunchTemplateVersion.VersionNumber' \
-      #       --output text)
-      #     echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+      - name: Create New Launch Template Version
+        id: lt_version
+        run: |
+          NEW_VERSION=$(aws ec2 create-launch-template-version \
+            --launch-template-id ${{ secrets.LAUNCH_TEMPLATE_ID }} \
+            --source-version 1 \
+            --launch-template-data "{\"ImageId\":\"${{ steps.ami_id.outputs.ami_id }}\"}" \
+            --query 'LaunchTemplateVersion.VersionNumber' \
+            --output text)
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
-      # - name: Update Auto Scaling Group to Use Latest Launch Template Version
-      #   run: |
-      #     aws autoscaling update-auto-scaling-group \
-      #       --auto-scaling-group-name ${{ secrets.ASG_NAME }} \
-      #       --launch-template "LaunchTemplateId=${{ secrets.LAUNCH_TEMPLATE_ID }},Version=${{ steps.lt_version.outputs.version }}"
+      - name: Update Auto Scaling Group to Use Latest Launch Template Version
+        run: |
+          aws autoscaling update-auto-scaling-group \
+            --auto-scaling-group-name ${{ secrets.ASG_NAME }} \
+            --launch-template "LaunchTemplateId=${{ secrets.LAUNCH_TEMPLATE_ID }},Version=${{ steps.lt_version.outputs.version }}"
 
-      # - name: Start Instance Refresh
-      #   id: refresh
-      #   run: |
-      #     REFRESH_ID=$(aws autoscaling start-instance-refresh \
-      #       --auto-scaling-group-name ${{ secrets.ASG_NAME }} \
-      #       --query 'InstanceRefreshId' \
-      #       --output text)
-      #     echo "refresh_id=$REFRESH_ID" >> $GITHUB_OUTPUT
+      - name: Start Instance Refresh
+        id: refresh
+        run: |
+          REFRESH_ID=$(aws autoscaling start-instance-refresh \
+            --auto-scaling-group-name ${{ secrets.ASG_NAME }} \
+            --query 'InstanceRefreshId' \
+            --output text)
+          echo "refresh_id=$REFRESH_ID" >> $GITHUB_OUTPUT
 
-      # - name: Wait for Instance Refresh to Complete
-      #   run: |
-      #     STATUS=""
-      #     while true; do
-      #       STATUS=$(aws autoscaling describe-instance-refreshes \
-      #         --auto-scaling-group-name ${{ secrets.ASG_NAME }} \
-      #         --instance-refresh-ids ${{ steps.refresh.outputs.refresh_id }} \
-      #         --query 'InstanceRefreshes[0].Status' \
-      #         --output text)
+      - name: Wait for Instance Refresh to Complete
+        run: |
+          STATUS=""
+          while true; do
+            STATUS=$(aws autoscaling describe-instance-refreshes \
+              --auto-scaling-group-name ${{ secrets.ASG_NAME }} \
+              --instance-refresh-ids ${{ steps.refresh.outputs.refresh_id }} \
+              --query 'InstanceRefreshes[0].Status' \
+              --output text)
 
-      #       echo "Current status: $STATUS"
-      #       if [[ "$STATUS" == "Successful" ]]; then
-      #         echo "Instance refresh completed successfully."
-      #         break
-      #       elif [[ "$STATUS" == "Cancelled" || "$STATUS" == "Failed" ]]; then
-      #         echo "Instance refresh failed or was cancelled."
-      #         exit 1
-      #       fi
-      #       sleep 30
-      #     done
+            echo "Current status: $STATUS"
+            if [[ "$STATUS" == "Successful" ]]; then
+              echo "Instance refresh completed successfully."
+              break
+            elif [[ "$STATUS" == "Cancelled" || "$STATUS" == "Failed" ]]; then
+              echo "Instance refresh failed or was cancelled."
+              exit 1
+            fi
+            sleep 30
+          done
 
 
