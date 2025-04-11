@@ -129,4 +129,4 @@ packer validate
 packer build
 ```
 
-# AWS Certificate Manager #
+# AWS Certificate Manager
