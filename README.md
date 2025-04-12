@@ -74,8 +74,9 @@ exit;
 ```
 
 ### 3. To run the application
-    $node app.js
-
+```bash
+$node app.js
+```
 
 ### 4. To run shell script
 ```bash
@@ -114,7 +115,8 @@ bash setup_web.sh
 ### GitHub Workflow CI
 We have implemented Continuous Integration (CI) using GitHub Actions to ensure code quality and prevent faulty code from being merged into the main branch.
 
-### Created AMIs with Packer
+### Packer Configuration
+Packer is used for creating machine images from a single source configuration. It helps in creating immutable infrastructure, ensuring consistency and reliability in the deployment process.
 
 
 ### Packer Format And Validate
