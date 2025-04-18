@@ -131,6 +131,3 @@ packer validate
 packer build
 ```
 
-#
-
-
